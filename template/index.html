@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+    <p>Click the button to get your coordinates.</p>
+
+    <button onclick="getLocation()">Get Location</button>
+
+    <p id="demo"></p>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        /*Fetch params value from url*/
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+
+        var id = getParameterByName('id');        
+        var x = document.getElementById("demo");
+
+        var socket = io({
+            query: {
+                userId: id
+            }
+        });
+
+        /*Get current geo location*/
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+                x.innerHTML = "Geolocation is not supported by this browser.";
+            }
+        }
+
+        function showPosition(position) {
+            socket.emit('location', getGeopositionObj(position));
+            x.innerHTML = "Latitude: " + position.coords.latitude +
+                "<br>Longitude: " + position.coords.longitude;
+        }
+
+        /*Parse geoposition to javascript object*/
+        function getGeopositionObj(geoposition) {
+            return {
+                timestamp: geoposition.timestamp,
+                coords: {
+                    accuracy: geoposition.coords.accuracy,
+                    altitude: geoposition.coords.altitude,
+                    altitudeAccuracy: geoposition.coords.altitudeAccuracy,
+                    heading: geoposition.coords.heading,
+                    latitude: geoposition.coords.latitude,
+                    longitude: geoposition.coords.longitude,
+                    speed: geoposition.coords.speed
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>
